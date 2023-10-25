@@ -1,6 +1,6 @@
 # Installation
 
-The following instructions are based on the [alphafold repository](https://github.com/google-deepmind/alphafold) and assumes you are using a Linux system with a CUDA-enabled GPU - tested on:
+The following instructions are based on the [alphafold repository](https://github.com/google-deepmind/alphafold) and assumes you are using a Linux system with a CUDA-enabled GPU, it was tested on:
 
 ```bash
 $ cat /etc/centos-release
@@ -12,6 +12,13 @@ NVIDIA GeForce GTX 1080 Ti
 NVIDIA GeForce GTX 1080 Ti
 NVIDIA GeForce GTX 1080 Ti
 ```
+
+1. [Clone this repository](#clone-this-repository)
+2. [Install `aria2c`](#aria2c)
+3. [Create a Python environment with Miniconda](#python-environment)
+4. [Download the data needed for Alphafold](#download-data)
+5. [Setup Alphafold](#setup)
+6. [Make a prediction](#make-a-prediction)
 
 ## Clone this repository
 
