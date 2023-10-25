@@ -1,4 +1,4 @@
-# AlphaFold-Wrapper for a small HPC systems
+# AlphaFold-Wrapper for small HPC systems
 
 [![Unlicense](https://img.shields.io/badge/License-Unlicense-blue.svg)](https://opensource.org/license/unlicense/)
 
