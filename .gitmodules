@@ -1,0 +1,6 @@
+[submodule "alphafold"]
+	path = alphafold
+	url = https://github.com/google-deepmind/alphafold
+[submodule "aria2"]
+	path = aria2
+	url = https://github.com/aria2/aria2
