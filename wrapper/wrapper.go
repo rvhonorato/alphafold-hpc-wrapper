@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type AFArguments struct {
@@ -21,48 +22,48 @@ type AFArguments struct {
 	Pdb70_database_path    string
 	Obsolete_pdbs_path     string
 	Use_gpu_relax          bool
+	Install_dir            string
+	Partition              string
 }
 
 var (
-	GPU_DEVICE  string
+	PARTITION   string
 	INSTALL_DIR string
+	DATA_DIR    string
 )
 
 func init() {
-	gpu := os.Getenv("GPU_DEVICE")
-	if gpu == "" {
-		GPU_DEVICE = "gpu001"
-	} else {
-		GPU_DEVICE = gpu
+	PARTITION = os.Getenv("PARTITION")
+	if PARTITION == "" {
+		PARTITION = "gpu"
 	}
-	installationDir := os.Getenv("INSTALL_DIR")
-	if installationDir == "" {
+	INSTALL_DIR = os.Getenv("INSTALL_DIR")
+	if INSTALL_DIR == "" {
 		INSTALL_DIR = "/trinity/login/rodrigo/repos/alphafold-wrapper"
-	} else {
-		INSTALL_DIR = installationDir
+	}
+	DATA_DIR = os.Getenv("DATA_DIR")
+	if DATA_DIR == "" {
+		DATA_DIR = "/trinity/login/rodrigo/repos/alphafold-wrapper/data"
 	}
 }
 
 // Load the environment variables into the arguments
 func loadEnv(maxDate, outputDir string) AFArguments {
 
-	dataDir := os.Getenv("DATA_DIR")
-	// if dataDir == "" {
-	// 	log.Fatal("DATA_DIR environment variable not set")
-	// }
-
 	args := AFArguments{}
 	args.Fasta_paths = ""
 	args.Max_template_date = maxDate
-	args.Data_dir = dataDir
+	args.Data_dir = DATA_DIR
+	args.Partition = PARTITION
+	args.Install_dir = INSTALL_DIR
 	args.Output_dir = outputDir
-	args.Uniref90_database_path = filepath.Join(dataDir, "uniref90/uniref90.fasta")
-	args.Mgnify_database_path = filepath.Join(dataDir, "mgnify/mgy_clusters_2022_05.fa")
-	args.Template_mmcif_dir = filepath.Join(dataDir, "pdb_mmcif/mmcif_files")
-	args.Bfd_database_path = filepath.Join(dataDir, "bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt")
-	args.Uniref30_database_path = filepath.Join(dataDir, "uniref30/UniRef30_2021_03")
-	args.Pdb70_database_path = filepath.Join(dataDir, "pdb70/pdb70")
-	args.Obsolete_pdbs_path = filepath.Join(dataDir, "pdb_mmcif/obsolete.dat")
+	args.Uniref90_database_path = filepath.Join(DATA_DIR, "uniref90/uniref90.fasta")
+	args.Mgnify_database_path = filepath.Join(DATA_DIR, "mgnify/mgy_clusters_2022_05.fa")
+	args.Template_mmcif_dir = filepath.Join(DATA_DIR, "pdb_mmcif/mmcif_files")
+	args.Bfd_database_path = filepath.Join(DATA_DIR, "bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt")
+	args.Uniref30_database_path = filepath.Join(DATA_DIR, "uniref30/UniRef30_2021_03")
+	args.Pdb70_database_path = filepath.Join(DATA_DIR, "pdb70/pdb70")
+	args.Obsolete_pdbs_path = filepath.Join(DATA_DIR, "pdb_mmcif/obsolete.dat")
 	args.Use_gpu_relax = true
 
 	return args
@@ -71,6 +72,10 @@ func loadEnv(maxDate, outputDir string) AFArguments {
 
 // FormatCmd formats the arguments into the proper command line arguments
 func (args *AFArguments) FormatCmd() string {
+
+	wd, _ := os.Getwd()
+	cdCmd := "cd " + wd
+
 	afCmd := "python " + filepath.Join(INSTALL_DIR, "alphafold/run_alphafold.py")
 	afCmd += " --fasta_paths=" + args.Fasta_paths
 	afCmd += " --max_template_date=" + args.Max_template_date
@@ -85,10 +90,10 @@ func (args *AFArguments) FormatCmd() string {
 	afCmd += " --obsolete_pdbs_path=" + args.Obsolete_pdbs_path
 	afCmd += " --use_gpu_relax=" + fmt.Sprintf("%t", args.Use_gpu_relax)
 
-	condaCMD := "source " + filepath.Join(INSTALL_DIR, "/miniconda3/etc/profile.d/conda.sh")
-	condaCMD += " && conda activate af2"
+	condaCMD := "source " + filepath.Join(INSTALL_DIR, "/miniconda3/etc/profile.d/conda.sh") + "\n"
+	condaCMD += "conda activate af2"
 
-	return condaCMD + " && " + afCmd
+	return condaCMD + "\n\n" + cdCmd + "\n\n" + afCmd
 
 }
 
@@ -96,7 +101,7 @@ func (args *AFArguments) FormatCmd() string {
 func prepareOutputDir(output_dir string, force bool) error {
 	_, err := os.Stat(output_dir)
 	if !os.IsNotExist(err) && !force {
-		return errors.New("output directory `" + output_dir + "` exists, run with -f to overwrite")
+		return errors.New("output directory `" + output_dir + "` exists, erase it or define a new one")
 	} else if !os.IsNotExist(err) && force {
 		os.RemoveAll(output_dir)
 
@@ -107,14 +112,34 @@ func prepareOutputDir(output_dir string, force bool) error {
 
 }
 
-// remoteRun runs the command in the remote machine
-func remoteRun(c string) (string, error) {
-	// fmt.Println("ssh " + GPU_DEVICE + " \"" + c + "\"")
-	out, err := exec.Command("ssh", GPU_DEVICE, "\""+c+"\"").CombinedOutput()
-	fmt.Println(string(out))
+// prepareJobFile prepares the job file
+func prepareJobFile(c, partition string) string {
+
+	header := "#!/bin/bash\n"
+	header += "#SBATCH --job-name=alphafold\n"
+	header += "#SBATCH --nodes=1\n"
+	header += "#SBATCH --ntasks-per-node=1\n"
+	header += "#SBATCH --cpus-per-task=1\n"
+	// header += "#SBATCH --mem=0\n"
+	// header += "#SBATCH --time=24:00:00\n"
+	header += "#SBATCH --partition=" + partition + "\n"
+	header += "#SBATCH --gres=gpu:1\n"
+	header += "#SBATCH --output=alphafold-%j.out\n"
+	header += "#SBATCH --error=alphafold-%j.err\n"
+
+	body := c
+
+	return header + body
+
+}
+
+func sbatch(c, partition string) (string, error) {
+	jobFile := prepareJobFile(c, partition)
+	cmd := exec.Command("sbatch")
+	cmd.Stdin = strings.NewReader(jobFile)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(out), err
 	}
 	return string(out), nil
-
 }
