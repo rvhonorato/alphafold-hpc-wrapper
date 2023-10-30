@@ -15,6 +15,7 @@ Note that this is **not** an in-depth guide and **not** affiliated with alphafol
   - [Build](#build)
   - [Configuration](#configuration)
   - [Execution](#execution)
+- [TODO](#todo)
 
 ## Installation
 
@@ -22,8 +23,55 @@ Please refer to the [INSTALL.md](INSTALL.md) file for a step-by-step installatio
 
 ## Wrapper
 
+Alphafold's CLI is not very user-friendly and is not integrated with the HPC's scheduling system. This repository contains a wrapper CLI that facilitates the execution of alphafold in a small HPC environment.
+
+It aims to expose less parameters and automates the execution of Alphafold via SLURM. It also provides a simple way to configure the execution via environment variables.
+
+It assumes that you followed the [installation procedure](INSTALL.md); it will create a SLURM job file on the fly (in memory) with the correct initialization of the miniconda alphafold environment, the arguments needed by alphafold and the correct paths to the data.
+
+
 ### Build
+
+[Install go](https://go.dev/doc/install) and build from source:
+
+```
+$ cd wrapper
+$ go build -o alphafold-wrapper
+```
 
 ### Configuration
 
+The wrapper will take the configuration from the system variables, currently it supports the following variables:
+
+- `PARTITION`: The SLURM partition to use.
+- `INSTALL_DIR`: The installation directory of this repository.
+- `DATA_DIR`: The path to the data directory.
+
+Either define them in your environment or directly from the command line:
+
+```bash
+$ export PARTITION=gpu
+$ export INSTALL_DIR=/trinity/login/rodrigo/repos/alphafold-wrapper
+$ export DATA_DIR=/trinity/login/rodrigo/repos/alphafold-wrapper/data
+```
+
 ### Execution
+
+The build produces a binary called `alphafold-wrapper`. It has the following usage:
+
+```bash
+$ ./alphafold-wrapper -h
+Usage:  ./alphafold-wrapper -f target.fasta -p <monomer|monomer_casp14|monomer_ptm|multimer> -o /path/to/output
+
+### To fold a multimer, the target.fasta must be a multi-fasta file
+### Ex: `https://www.rcsb.org/fasta/entry/2OOB/display`
+
+```
+
+
+## TODO
+
+- Add more customization options to the SLURM job file
+- Allow to re-use MSAs
+- Add automated tests to the wrapper
+- Add a build pipeline
