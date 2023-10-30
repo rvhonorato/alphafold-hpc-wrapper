@@ -10,20 +10,23 @@ import (
 )
 
 type AFArguments struct {
-	Fasta_paths            string
-	Max_template_date      string
-	Data_dir               string
-	Output_dir             string
-	Uniref90_database_path string
-	Mgnify_database_path   string
-	Template_mmcif_dir     string
-	Bfd_database_path      string
-	Uniref30_database_path string
-	Pdb70_database_path    string
-	Obsolete_pdbs_path     string
-	Use_gpu_relax          bool
-	Install_dir            string
-	Partition              string
+	Fasta_paths              string
+	Max_template_date        string
+	Data_dir                 string
+	Output_dir               string
+	Uniref90_database_path   string
+	Mgnify_database_path     string
+	Template_mmcif_dir       string
+	Bfd_database_path        string
+	Uniref30_database_path   string
+	Pdb70_database_path      string
+	Obsolete_pdbs_path       string
+	Pdb_seqres_database_path string
+	Uniprot_database_path    string
+	Use_gpu_relax            bool
+	Preset                   string
+	Install_dir              string
+	Partition                string
 }
 
 var (
@@ -57,6 +60,7 @@ func loadEnv(maxDate, outputDir string) AFArguments {
 	args.Partition = PARTITION
 	args.Install_dir = INSTALL_DIR
 	args.Output_dir = outputDir
+	args.Preset = ""
 	args.Uniref90_database_path = filepath.Join(DATA_DIR, "uniref90/uniref90.fasta")
 	args.Mgnify_database_path = filepath.Join(DATA_DIR, "mgnify/mgy_clusters_2022_05.fa")
 	args.Template_mmcif_dir = filepath.Join(DATA_DIR, "pdb_mmcif/mmcif_files")
@@ -64,6 +68,8 @@ func loadEnv(maxDate, outputDir string) AFArguments {
 	args.Uniref30_database_path = filepath.Join(DATA_DIR, "uniref30/UniRef30_2021_03")
 	args.Pdb70_database_path = filepath.Join(DATA_DIR, "pdb70/pdb70")
 	args.Obsolete_pdbs_path = filepath.Join(DATA_DIR, "pdb_mmcif/obsolete.dat")
+	args.Pdb_seqres_database_path = filepath.Join(DATA_DIR, "pdb_seqres/pdb_seqres.txt")
+	args.Uniprot_database_path = filepath.Join(DATA_DIR, "uniprot/uniprot.fasta")
 	args.Use_gpu_relax = true
 
 	return args
@@ -86,9 +92,15 @@ func (args *AFArguments) FormatCmd() string {
 	afCmd += " --template_mmcif_dir=" + args.Template_mmcif_dir
 	afCmd += " --bfd_database_path=" + args.Bfd_database_path
 	afCmd += " --uniref30_database_path=" + args.Uniref30_database_path
-	afCmd += " --pdb70_database_path=" + args.Pdb70_database_path
 	afCmd += " --obsolete_pdbs_path=" + args.Obsolete_pdbs_path
 	afCmd += " --use_gpu_relax=" + fmt.Sprintf("%t", args.Use_gpu_relax)
+	afCmd += " --model_preset=" + args.Preset
+	if args.Preset == "multimer" {
+		afCmd += " --pdb_seqres_database_path=" + args.Pdb_seqres_database_path
+		afCmd += " --uniprot_database_path=" + args.Uniprot_database_path
+	} else {
+		afCmd += " --pdb70_database_path=" + args.Pdb70_database_path
+	}
 
 	condaCMD := "source " + filepath.Join(INSTALL_DIR, "/miniconda3/etc/profile.d/conda.sh") + "\n"
 	condaCMD += "conda activate af2"
@@ -98,13 +110,10 @@ func (args *AFArguments) FormatCmd() string {
 }
 
 // prepareOutputDir prepares the output directory, if it exists and the force flag is not set, it will exit
-func prepareOutputDir(output_dir string, force bool) error {
+func prepareOutputDir(output_dir string) error {
 	_, err := os.Stat(output_dir)
-	if !os.IsNotExist(err) && !force {
+	if !os.IsNotExist(err) {
 		return errors.New("output directory `" + output_dir + "` exists, erase it or define a new one")
-	} else if !os.IsNotExist(err) && force {
-		os.RemoveAll(output_dir)
-
 	}
 	os.MkdirAll(output_dir, 0755)
 
@@ -119,9 +128,7 @@ func prepareJobFile(c, partition string) string {
 	header += "#SBATCH --job-name=alphafold\n"
 	header += "#SBATCH --nodes=1\n"
 	header += "#SBATCH --ntasks-per-node=1\n"
-	header += "#SBATCH --cpus-per-task=1\n"
-	// header += "#SBATCH --mem=0\n"
-	// header += "#SBATCH --time=24:00:00\n"
+	header += "#SBATCH --cpus-per-task=8\n"
 	header += "#SBATCH --partition=" + partition + "\n"
 	header += "#SBATCH --gres=gpu:1\n"
 	header += "#SBATCH --output=alphafold-%j.out\n"
