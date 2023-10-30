@@ -35,6 +35,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Check if the file exists
+	_, err := os.Stat(fasta_paths)
+	if os.IsNotExist(err) {
+		glog.Error("File ", fasta_paths, " does not exist")
+		os.Exit(1)
+	}
+
 	if output_dir == "" {
 		glog.Error("-o argument not set")
 		flag.Usage()
@@ -45,7 +52,7 @@ func main() {
 	glog.Info("AlphaFold wrapper")
 	glog.Info("######################################################")
 
-	err := prepareOutputDir(output_dir, force)
+	err = prepareOutputDir(output_dir, force)
 	if err != nil {
 		glog.Error(err)
 		os.Exit(1)
