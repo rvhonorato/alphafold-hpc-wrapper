@@ -5,8 +5,6 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/a7bc51bb94d748d5ad4e4fc237cb1982)](https://app.codacy.com/gh/rvhonorato/alphafold-hpc-wrapper/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Unlicense](https://img.shields.io/badge/License-Unlicense-blue.svg)](https://opensource.org/license/unlicense/)
 
-⚠️⚠️⚠️ WORK IN PROGRESS ⚠️⚠️⚠️
-
 This repository contains a set of instructions on how-to-install alphafold on a HPC cluster. It is based on the [alphafold repository](https://github.com/google-deepmind/alphafold).
 
 There they go over the instructions to install alphafold on a single machine with Docker - however you might want to install it in your local cluster. This repository contains a step-by-step installation procedure as well as a custom-built wrapper CLI to facilitate the execution of alphafold in a _small_ HPC environment.
