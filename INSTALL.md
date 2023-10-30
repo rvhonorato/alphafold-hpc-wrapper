@@ -75,6 +75,12 @@ $ nohup bash $ALPHAFOLD_WRAPPER/alphafold/scripts/download_all_data.sh $ALPHAFOL
 $ tail nohup.out
 ```
 
+### Download `stereo_chemical_props.txt`
+
+```bash
+wget https://git.scicore.unibas.ch/schwede/openstructure/-/raw/7102c63615b64735c4941278d92b554ec94415f8/modules/mol/alg/src/stereo_chemical_props.txt -O $ALPHAFOLD_WRAPPER/alphafold/alphafold/common/stereo_chemical_props.txt
+```
+
 ### Setup
 
 Find out what is your CUDA version and set the `CUDA_VERSION` variable
