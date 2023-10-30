@@ -1,5 +1,6 @@
 # AlphaFold-Wrapper for small HPC systems
 
+[![unittests](https://github.com/rvhonorato/alphafold-hpc-wrapper/actions/workflows/unittests.yml/badge.svg)](https://github.com/rvhonorato/alphafold-hpc-wrapper/actions/workflows/unittests.yml)
 [![Unlicense](https://img.shields.io/badge/License-Unlicense-blue.svg)](https://opensource.org/license/unlicense/)
 
 ⚠️⚠️⚠️ WORK IN PROGRESS ⚠️⚠️⚠️
