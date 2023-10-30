@@ -16,6 +16,7 @@ Note that this is **not** an in-depth guide and **not** affiliated with alphafol
   - [Configuration](#configuration)
   - [Execution](#execution)
 - [TODO](#todo)
+- [Support](#support)
 
 ## Installation
 
@@ -75,3 +76,7 @@ Usage:  ./alphafold-wrapper -f target.fasta -p <monomer|monomer_casp14|monomer_p
 - Allow to re-use MSAs
 - Add automated tests to the wrapper
 - Add a build pipeline
+
+## Support
+
+If you have any questions or suggestions, please open an issue.
