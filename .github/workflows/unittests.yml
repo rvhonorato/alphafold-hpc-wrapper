@@ -27,4 +27,5 @@ jobs:
         run: go test -v ./... -coverprofile=coverage.out
 
       - name: Run codacy-coverage-reporter
+        working-directory: ./wrapper
         run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --force-coverage-parser go -r coverage.out
