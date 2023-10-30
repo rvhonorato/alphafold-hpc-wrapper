@@ -1,4 +1,4 @@
-package main
+package overlay
 
 import (
 	"errors"
@@ -36,6 +36,12 @@ var (
 )
 
 func init() {
+
+}
+
+// Load the environment variables into the arguments
+func LoadEnv(maxDate, outputDir string) AFArguments {
+
 	PARTITION = os.Getenv("PARTITION")
 	if PARTITION == "" {
 		PARTITION = "gpu"
@@ -48,10 +54,6 @@ func init() {
 	if DATA_DIR == "" {
 		DATA_DIR = "/trinity/login/rodrigo/repos/alphafold-wrapper/data"
 	}
-}
-
-// Load the environment variables into the arguments
-func loadEnv(maxDate, outputDir string) AFArguments {
 
 	args := AFArguments{}
 	args.Fasta_paths = ""
@@ -109,8 +111,8 @@ func (args *AFArguments) FormatCmd() string {
 
 }
 
-// prepareOutputDir prepares the output directory, if it exists and the force flag is not set, it will exit
-func prepareOutputDir(output_dir string) error {
+// PrepareOutputDir prepares the output directory, if it exists and the force flag is not set, it will exit
+func PrepareOutputDir(output_dir string) error {
 	_, err := os.Stat(output_dir)
 	if !os.IsNotExist(err) {
 		return errors.New("output directory `" + output_dir + "` exists, erase it or define a new one")
@@ -140,9 +142,9 @@ func prepareJobFile(c, partition string) string {
 
 }
 
-func sbatch(c, partition string) (string, error) {
+func RunCommand(c, partition, command string) (string, error) {
 	jobFile := prepareJobFile(c, partition)
-	cmd := exec.Command("sbatch")
+	cmd := exec.Command(command)
 	cmd.Stdin = strings.NewReader(jobFile)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

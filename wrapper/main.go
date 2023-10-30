@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"haddocking/alphafold-wrapper/overlay"
 	"os"
 
 	"github.com/golang/glog"
@@ -73,14 +74,14 @@ func main() {
 	glog.Info("AlphaFold wrapper")
 	glog.Info("######################################################")
 
-	err = prepareOutputDir(output_dir)
+	err = overlay.PrepareOutputDir(output_dir)
 	if err != nil {
 		glog.Error(err)
 		os.Exit(1)
 	}
 	glog.Info("Output directory: ", output_dir)
 
-	args := loadEnv(max_template_date, output_dir)
+	args := overlay.LoadEnv(max_template_date, output_dir)
 
 	args.Fasta_paths = fasta_paths
 	args.Output_dir = output_dir
@@ -89,7 +90,7 @@ func main() {
 
 	cmd := args.FormatCmd()
 
-	out, err := sbatch(cmd, args.Partition)
+	out, err := overlay.RunCommand(cmd, args.Partition, "sbatch")
 	if err != nil {
 		glog.Info("Error running sbatch")
 		glog.Error(err)

@@ -1,7 +1,8 @@
-package main
+package overlay
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -12,7 +13,7 @@ func TestLoadEnv(t *testing.T) {
 	outputDir := "/path/to/output"
 	dataDir := "/path/to/data"
 	os.Setenv("DATA_DIR", dataDir)
-	args := loadEnv(maxDate, outputDir)
+	args := LoadEnv(maxDate, outputDir)
 
 	if args.Max_template_date != maxDate {
 		t.Errorf("AFArguments.Max_template_date = %q, want %q", args.Max_template_date, maxDate)
@@ -51,7 +52,15 @@ func TestLoadEnv(t *testing.T) {
 	}
 
 	if args.Obsolete_pdbs_path != "/path/to/data/pdb_mmcif/obsolete.dat" {
-		t.Errorf("AFArguments.Obsolete_pdbs_path = %q, want %q", args.Obsolete_pdbs_path, "/path/to/data/pdb70/obsolete.dat")
+		t.Errorf("AFArguments.Obsolete_pdbs_path = %q, want %q", args.Obsolete_pdbs_path, "/path/to/data/pdb_mmcif/obsolete.dat")
+	}
+
+	os.Setenv("DATA_DIR", "")
+
+	args = LoadEnv(maxDate, outputDir)
+
+	if args.Data_dir == "" {
+		t.Errorf("AFArguments.Data_dir = %q, want %q", args.Data_dir, dataDir)
 	}
 
 }
@@ -65,7 +74,6 @@ func TestPrepareOutputDir(t *testing.T) {
 
 	type args struct {
 		outputDir string
-		force     bool
 	}
 	tests := []struct {
 		name    string
@@ -76,37 +84,20 @@ func TestPrepareOutputDir(t *testing.T) {
 			name: "Test prepare output dir",
 			args: args{
 				outputDir: nonExistingDir,
-				force:     false,
-			},
-		},
-		{
-			name: "Test prepare output dir with force",
-			args: args{
-				outputDir: existingDir,
-				force:     true,
 			},
 		},
 		{
 			name: "Test prepare output for existing dir without force",
 			args: args{
 				outputDir: existingDir,
-				force:     false,
 			},
 			wantErr: true,
-		},
-		{
-			name: "Test prepare output for existing dir with force",
-			args: args{
-				outputDir: existingDir,
-				force:     true,
-			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			outputDir := tt.args.outputDir
-			force := tt.args.force
-			if err := prepareOutputDir(outputDir, force); (err != nil) != tt.wantErr {
+			if err := PrepareOutputDir(outputDir); (err != nil) != tt.wantErr {
 				t.Errorf("prepareOutputDir() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -131,9 +122,49 @@ func TestAFArguments_FormatCmd(t *testing.T) {
 		Use_gpu_relax:          true,
 	}
 
-	expectedCmd := "source /trinity/login/rodrigo/repos/alphafold-wrapper/miniconda3/etc/profile.d/conda.sh && conda activate af2 && python /trinity/login/rodrigo/repos/alphafold-wrapper/alphafold/run_alphafold.py --fasta_paths=/path/to/fasta --max_template_date=2022-01-01 --data_dir=/path/to/data --output_dir=/path/to/output --uniref90_database_path=/path/to/uniref90 --mgnify_database_path=/path/to/mgnify --template_mmcif_dir=/path/to/template --bfd_database_path=/path/to/bfd --uniref30_database_path=/path/to/uniref30 --pdb70_database_path=/path/to/pdb70 --obsolete_pdbs_path=/path/to/obsolete_pdbs --use_gpu_relax=true"
+	expectedCmd := "source /trinity/login/rodrigo/repos/alphafold-wrapper/miniconda3/etc/profile.d/conda.sh\nconda activate af2\n\ncd /home/rodrigo/repos/alphafold-wrapper/wrapper/overlay\n\npython /trinity/login/rodrigo/repos/alphafold-wrapper/alphafold/run_alphafold.py --fasta_paths=/path/to/fasta --max_template_date=2022-01-01 --data_dir=/path/to/data --output_dir=/path/to/output --uniref90_database_path=/path/to/uniref90 --mgnify_database_path=/path/to/mgnify --template_mmcif_dir=/path/to/template --bfd_database_path=/path/to/bfd --uniref30_database_path=/path/to/uniref30 --obsolete_pdbs_path=/path/to/obsolete_pdbs --use_gpu_relax=true --model_preset= --pdb70_database_path=/path/to/pdb70"
 
 	if gotCmd := args.FormatCmd(); gotCmd != expectedCmd {
 		t.Errorf("AFArguments.FormatCmd() = %q, want %q", gotCmd, expectedCmd)
 	}
+
+	args.Preset = "multimer"
+
+	expectedCmd = "source /trinity/login/rodrigo/repos/alphafold-wrapper/miniconda3/etc/profile.d/conda.sh\nconda activate af2\n\ncd /home/rodrigo/repos/alphafold-wrapper/wrapper/overlay\n\npython /trinity/login/rodrigo/repos/alphafold-wrapper/alphafold/run_alphafold.py --fasta_paths=/path/to/fasta --max_template_date=2022-01-01 --data_dir=/path/to/data --output_dir=/path/to/output --uniref90_database_path=/path/to/uniref90 --mgnify_database_path=/path/to/mgnify --template_mmcif_dir=/path/to/template --bfd_database_path=/path/to/bfd --uniref30_database_path=/path/to/uniref30 --obsolete_pdbs_path=/path/to/obsolete_pdbs --use_gpu_relax=true --model_preset=multimer --pdb_seqres_database_path= --uniprot_database_path="
+
+	if gotCmd := args.FormatCmd(); gotCmd != expectedCmd {
+		t.Errorf("AFArguments.FormatCmd() = %q, want %q", gotCmd, expectedCmd)
+	}
+
+}
+
+func TestPrepareJobFile(t *testing.T) {
+
+	result := prepareJobFile("", "")
+
+	// Check if there are #SBATCH lines
+	if !strings.Contains(result, "#SBATCH") {
+		t.Errorf("prepareJobFile() = %q, want %q", result, "#SBATCH")
+	}
+
+}
+
+// This test function checks if the runCommand function works as expected.
+func TestRunCommand(t *testing.T) {
+
+	got, err := RunCommand("", "", "cat")
+	if err != nil {
+		t.Errorf("runCommand() error = %v, wantErr %v", err, true)
+	}
+
+	// Check if there is #SBATCH in the output
+	if !strings.Contains(got, "#SBATCH") {
+		t.Errorf("runCommand() = %q, want %q", got, "#SBATCH")
+	}
+
+	got, err = RunCommand("", "", "non-existing-command")
+	if err == nil {
+		t.Errorf("runCommand() error = %v, wantErr %v", err, true)
+	}
+
 }
