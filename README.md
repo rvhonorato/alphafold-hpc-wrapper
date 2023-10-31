@@ -1,9 +1,9 @@
 # AlphaFold-Wrapper for small HPC systems
 
 [![unittests](https://github.com/rvhonorato/alphafold-hpc-wrapper/actions/workflows/unittests.yml/badge.svg)](https://github.com/rvhonorato/alphafold-hpc-wrapper/actions/workflows/unittests.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/a7bc51bb94d748d5ad4e4fc237cb1982)](https://app.codacy.com/gh/rvhonorato/alphafold-hpc-wrapper/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a7bc51bb94d748d5ad4e4fc237cb1982)](https://app.codacy.com/gh/rvhonorato/alphafold-hpc-wrapper/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Unlicense](https://img.shields.io/badge/License-Unlicense-blue.svg)](https://opensource.org/license/unlicense/)
-
-⚠️⚠️⚠️ WORK IN PROGRESS ⚠️⚠️⚠️
 
 This repository contains a set of instructions on how-to-install alphafold on a HPC cluster. It is based on the [alphafold repository](https://github.com/google-deepmind/alphafold).
 
