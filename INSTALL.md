@@ -105,23 +105,42 @@ $ conda config --set solver libmamba
 $ conda create -y -n af2 python=3.10 && conda activate af2
 
 # Install conda packages
-(af2) $ conda install -y -c conda-forge -c bioconda hmmer==3.3.2 kalign3 hhsuite==3.3.0 openmm=7.7.0 cudatoolkit==${CUDA_VERSION} pdbfixer pip
+(af2) $ conda install -y -c conda-forge -c bioconda \
+  tensorflow-gpu \
+  hmmer==3.3.2 \
+  kalign3 \
+  hhsuite==3.3.0 \
+  openmm=7.7.0 \
+  cudatoolkit==${CUDA_VERSION} \
+  absl-py==1.0.0 \
+  biopython==1.79 \
+  chex==0.0.7 \
+  dm-haiku==0.0.10 \
+  dm-tree==0.1.8 \
+  immutabledict==2.0.0 \
+  numpy==1.24.3 \
+  pandas==2.0.3 \
+  scipy==1.11.1 \
+  ml_dtypes==0.2.0 \
+  pdbfixer \
+  pip
 
-# Install pip packages
-(af2) $ pip install -r $ALPHAFOLD_WRAPPER/alphafold/requirements.txt
-
+# Install the PIP packages
 ## mind the cuda version here!
-(af2) $ pip install jax==0.4.14 jaxlib==0.4.14+cuda11.cudnn86 \
-  -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+(af2) $ pip install jax==0.4.14 jaxlib==0.4.14+cuda11.cudnn86 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+(af2) $ pip install ml-collections==0.1.0
+```
 
-(af2) $ pip install ml_dtypes==0.2.0
-
+```bash
+# Make sure the GPU is available
+(af2) $ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU'), PhysicalDevice(name='/physical_device:GPU:1', device_type='GPU'), PhysicalDevice(name='/physical_device:GPU:2', device_type='GPU'), PhysicalDevice(name='/physical_device:GPU:3', device_type='GPU')]
 ```
 
 Test the command, you should not see any errors or warnings!
 
 ```bash
-$ python $ALPHAFOLD_WRAPPER/alphafold/run_alphafold.py --helpshort
+(af2) $ python $ALPHAFOLD_WRAPPER/alphafold/run_alphafold.py --helpshort
 Full AlphaFold protein structure prediction script.
 flags:
 
@@ -131,39 +150,4 @@ flags:
     (default: 'false')
   --bfd_database_path: Path to the BFD database for use by HHblits.
   # ... etc etc
-```
-
-## Make a prediction
-
-```bash
-# Define the location of the databases
-export DATA_DIR=$ALPHAFOLD_WRAPPER/data
-export UNIREF90_DATABASE_PATH=$DATA_DIR/uniref90/uniref90.fasta
-export MGNIFY_DATABASE_PATH=$DATA_DIR/mgnify/mgy_clusters_2022_05.fa
-export BFD_DATABASE_PATH=$DATA_DIR/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt
-export UNIREF50_DATABASE_PATH=$DATA_DIR/uniref50/uniref50.fasta
-export PDB70_DATABASE_PATH=$DATA_DIR/pdb70/pdb70
-export TEMPLATE_MMCIF_PATH=$DATA_DIR/pdb_mmcif/mmcif_files
-export BFD_DATABASE_PATH=$DATA_DIR/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt
-export UNIREF30_DATABASE_PATH=$DATA_DIR/uniref30/UniRef30_2021_03
-export OBSOLETE_PDB_PATH=$DATA_DIR/pdb_mmcif/obsolete.dat
-
-# Define the Input sequence
-export INPUT_FASTA=$ALPHAFOLD_WRAPPER/example_data/1crn.fasta
-export OUTPUT_DIR=$ALPHAFOLD_WRAPPER/example_data
-export MAX_TEMPLATE_DATE=2022-01-01
-
-(af2) $ python $ALPHAFOLD_WRAPPER/alphafold/run_alphafold.py \
-  --fasta_paths=$INPUT_FASTA \
-  --max_template_date=$MAX_TEMPLATE_DATE \
-  --data_dir=$DATA_DIR \
-  --output_dir=$OUTPUT_DIR \
-  --uniref90_database_path=$UNIREF90_DATABASE_PATH \
-  --mgnify_database_path=$MGNIFY_DATABASE_PATH \
-  --template_mmcif_dir=$TEMPLATE_MMCIF_PATH \
-  --bfd_database_path=$BFD_DATABASE_PATH \
-  --uniref30_database_path=$UNIREF30_DATABASE_PATH \
-  --pdb70_database_path=$PDB70_DATABASE_PATH \
-  --obsolete_pdbs_path=$OBSOLETE_PDB_PATH \
-  --use_gpu_relax=True
 ```
