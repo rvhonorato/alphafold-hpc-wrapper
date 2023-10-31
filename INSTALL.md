@@ -110,9 +110,12 @@ $ conda create -y -n af2 python=3.10 && conda activate af2
 # Install pip packages
 (af2) $ pip install -r $ALPHAFOLD_WRAPPER/alphafold/requirements.txt
 
-## mind the cuda version here; cuda11.cudnn805!
-(af2) $ pip install jax==0.3.25 jaxlib==0.3.25+cuda11.cudnn805 \
+## mind the cuda version here!
+(af2) $ pip install jax==0.4.14 jaxlib==0.4.14+cuda11.cudnn86 \
   -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
+(af2) $ pip install ml_dtypes==0.2.0
+
 ```
 
 Test the command, you should not see any errors or warnings!
