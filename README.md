@@ -75,7 +75,7 @@ Usage:  ./alphafold-wrapper -f target.fasta -p <monomer|monomer_casp14|monomer_p
 
 - Add more customization options to the SLURM job file
 - Allow to re-use MSAs
-- Add automated tests to the wrapper
+- ~Add automated tests to the wrapper~ ✅
 - Add a build pipeline
 
 ## Support
